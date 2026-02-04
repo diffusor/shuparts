@@ -79,6 +79,16 @@ class Section:
 
 replacements = {
     'metNoteQuarterUp': '♩',
+    'metNoteHalfUp': '𝅗𝅥',
+    'metNoteWhole': '𝅝',
+    'metNote8thUp': '♪',
+    'metNote16thUp': '𝅘𝅥𝅯',
+    'metAugmentationDot': '.',
+    'metNoteQuarterUpDot': '♩.',
+    'metNoteHalfUpDot': '𝅗𝅥.',
+    'metNoteWholeDot': '𝅝.',
+    'metNote8thUpDot': '♪.',
+    'metNote16thUpDot': '𝅘𝅥𝅯.',
 }
 def alltext(elt):
     def filter(e):
