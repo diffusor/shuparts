@@ -4,18 +4,20 @@ import os
 import sys
 import random
 import zipfile
+from dataclasses import dataclass, field
 import xml.etree.ElementTree as ET
 
 def shuf(partspec):
     print("Available parts:\n")
     parts = []
-    if partspec and isinstance(partspec[0], list):
-        for i, subparts in enumerate(partspec):
-            print(f"  section {i+1}: {' '.join(subparts)}")
-            parts.extend(f"{i+1}:{part}" for part in subparts)
-        section = input("\nEnter section to choose from, or hit enter to practice all: ")
-        if section:
-            i = int(section)
+    if partspec and isinstance(partspec[0], Section):
+        for i, section in enumerate(partspec):
+            print(f"{i+1}: {section.title} ({section.tempo})\n  {' '.join(section.parts)}\n")
+            parts.extend(f"{i+1}:{part}" for part in section.parts)
+
+        section_num = input("\nEnter section # to choose from, or hit enter to practice all: ")
+        if section_num:
+            i = int(section_num)
             parts = list(partspec[i-1])
 
     else:
@@ -69,43 +71,71 @@ def extract_parts_from_mscx(fname):
 
     return extract_parts_from_mscx_str(mscx_str)
 
+@dataclass
+class Section:
+    title: str = ""
+    tempo: str = ""
+    parts: [str] = field(default_factory=list)
+
+replacements = {
+    'metNoteQuarterUp': '♩',
+}
+def alltext(elt):
+    def filter(e):
+        return replacements.get(e, e).replace('\n', ' / ')
+    return ''.join(filter(e) for e in elt.itertext()).strip()
+
 def extract_parts_from_mscx_str(mscx_str):
     root = ET.fromstring(mscx_str)
-    parts = []
-    sections = [parts] # list of lists
+    section = Section()
+    sections = [section] # list of Section instances
     description = ""
     desc_uses = {}
     desc_subpart = 0
-    for measure in root.iter('Measure'):
-        # Find part description to append to each part until the next section
-        for staff_text in measure.iter('StaffText'):
-            text = staff_text.find('text').text.strip()
-            if text.startswith('['):
-                description = text.replace(" ", "-")
-                desc_uses.setdefault(description, 0)
-                desc_uses[description] += 1
-                desc_subpart = 0
 
-        for mark in measure.iter('RehearsalMark'):
-            part = mark.find('text').text.strip()
-            if description:
-                part = f"{part}{description}"
-                desc_usecount = desc_uses[description]
-                if desc_usecount > 1:
-                    part = f"{part}{desc_usecount}"
+    # only scan for marks in the topmost staff
+    staff1 = root.find(".//Score/Staff[@id='1']")
+    for child in staff1:
+        if child.tag == 'VBox':
+            # use the last title box only - any prior title is overridden
+            for title_elt in child.findall("Text[style='title']/text"):
+                section.title = alltext(title_elt)
 
-                desc_subpart += 1
-                if desc_subpart > 1:
-                    part = f"{part}.{desc_subpart}"
-            parts.append(part)
+        if child.tag == 'Measure':
+            measure = child
+            # Find part description to append to each part until the next section
+            for staff_text in measure.iter('StaffText'):
+                text = alltext(staff_text.find('text'))
+                if text.startswith('['):
+                    description = text.replace(" ", "-")
+                    desc_uses.setdefault(description, 0)
+                    desc_uses[description] += 1
+                    desc_subpart = 0
 
-        for layout_break in measure.iter('LayoutBreak'):
-            subtype = layout_break.find('subtype')
-            if subtype is not None and subtype.text.strip() == 'section':
-                parts = []
-                sections.append(parts)
+            if not section.tempo:
+                for tempo in measure.iter('Tempo'):
+                    if text := tempo.find('text'):
+                        section.tempo = alltext(text)
+
+            for mark in measure.iter('RehearsalMark'):
+                part = alltext(mark.find('text'))
+                if description:
+                    part = f"{part}{description}"
+                    desc_usecount = desc_uses[description]
+                    if desc_usecount > 1:
+                        part = f"{part}{desc_usecount}"
+
+                    desc_subpart += 1
+                    if desc_subpart > 1:
+                        part = f"{part}.{desc_subpart}"
+                section.parts.append(part)
+
+            for layout_break in measure.iterfind("LayoutBreak[subtype='section']"):
+                section = Section()
+                sections.append(section)
                 description = ""
                 desc_subpart = 0
+                break
 
     return sections
 
