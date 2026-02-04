@@ -13,12 +13,16 @@ def shuf(partspec):
     if partspec and isinstance(partspec[0], Section):
         for i, section in enumerate(partspec):
             print(f"{i+1}: {section.title} ({section.tempo})\n  {' '.join(section.parts)}\n")
-            parts.extend(f"{i+1}:{part}" for part in section.parts)
+            if len(partspec) > 1:
+                parts.extend(f"{i+1}:{part}" for part in section.parts)
+            else:
+                parts.extend(section.parts)
 
-        section_num = input("\nEnter section # to choose from, or hit enter to practice all: ")
-        if section_num:
-            i = int(section_num)
-            parts = list(partspec[i-1])
+        if len(partspec) > 1:
+            section_num = input("\nEnter section # to choose from, or hit enter to practice all: ")
+            if section_num:
+                i = int(section_num)
+                parts = list(partspec[i-1].parts)
 
     else:
         parts.extend(partspec)
