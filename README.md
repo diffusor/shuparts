@@ -20,7 +20,7 @@ shuparts exits.
 
 # Examples
 
-## shuparts.py example execution
+### shuparts.py example execution
 
     $ shuparts.py 3-Gymnopedies.Erik-Satie.mscz
     Available parts:
@@ -49,6 +49,19 @@ shuparts exits.
     <exiting early due to ctrl-C>
     $
 
-## MuseScore Studio music snippet from page 5 of 3-Gymnopedies.Erik-Satie.mscz
+### MuseScore Studio music snippet
+
+This is from page 5 of 3-Gymnopedies.Erik-Satie.mscz used in the above command line execution example:
 
 ![Snippet from the score of Satie's Gymnopedies](assets/example_score.png)
+
+# MuseScore Studio .mscz file details
+
+- shuparts only looks at the topmost staff, so only add markings there&mdash;marks in the lower staves are ignored.
+- Rehearsal marks are the fundamental practice unit.  They can be inserted easily be selecting a note or rest in the top staff and hitting `ctrl-m`.  Space them at comfortable intervals for flashcard practice.
+- Staff text of the format `[description]` (words enclosed in square brackets) are pulled from the same measure containing a Rehearsal mark and are associated with that mark.  See the A1 mark with the `[basis]` description in the score snippet above.  Use this to provide mnemonics to the parts you want to practice.  Add staff text by selecting a note or rest in the top staff and hitting `ctrl-t`.
+- If a Rehearsal mark doesn't have a `[description]` staff text in the same measure, shuparts will apply the description from the closest mark that does.  In this case, the description will be suffixed with a `.` and the number corresponding to the number of marks this is past the last one with a `[description]`.  For example, see the `A1.2[Basis].2` part name in the shuparts.py execution example above.
+- If a `[description]` with the same text occurs again with a later Rehearsal mark, the number of times this has happened is suffixed to the `[description]` in the part name, prior to any `.N` from the above point.  For example, see the `F3[Minor-basis]3.2` part name in the exection above.  This means the description `[Minor-basis]` has been applied to 2 prior marks, and the `F3` mark does not have a `[description]`, but the prior mark did.
+- Sections are separated by Section breaks.  Insert a section break in MuseScore Studio by selecting the measure you want the break to occur after and selecting the *Section break* icon from the *Layout* palette - it looks like `]]`.
+- To name a section, it needs a Title text.  Insert one by selecting the first measure of the section (the one right after the section break), and using the menu item *Add -> Frames -> Insert vertical frame*.  Then select the frame and use *Add -> Text -> Title*.
+- To add a performance tempo description (e.g. shown as `♩ = 69 Lent et triste` in the example), select the first measure of the section and choose a tempo marking from the *Tempo* palette.  If you want to change the tempor or add additional expression guidance text to the tempo marking, select the tempo marking you added to the score and click into it again to set the insert cursor so you can type. 
